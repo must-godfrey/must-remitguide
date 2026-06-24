@@ -77,6 +77,7 @@
     heroBadge: "simulated demo", heroTitle: "Send money home,", heroTitleEm: "without the worry.",
     heroIntro: "Talk to me in your language. I'll find the cheapest way, explain it plainly, protect your family from scams, and never move a won without your say-so.",
     starterSend: "Send money home", starterCompare: "Compare costs", starterTrack: "Where's my money?", starterSafe: "Stay safe",
+    starterDemo: "Watch the demo", demoOr: "or try a prompt", demoChip: "Demo",
     footer: "Demo only · all transfers are simulated · rates are illustrative",
     readAloud: "Read aloud", bestValue: "Best value", allInCost: "all-in cost",
     familyReceives: "Your family receives {amount}", optionsToSend: "Your options to send {amount}",
@@ -280,6 +281,9 @@
       "starterCompare": "비용 비교하기",
       "starterTrack": "내 돈 어디까지 갔나요?",
       "starterSafe": "안전하게 지키기",
+      "starterDemo": "데모 보기",
+      "demoOr": "또는 직접 입력해 보세요",
+      "demoChip": "데모",
       "footer": "데모 전용 · 모든 송금은 가상입니다 · 환율은 예시입니다"
     },
     "zh": {

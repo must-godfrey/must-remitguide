@@ -77,11 +77,11 @@
 
     // the agent reasons with tools (each step shows its inputs/outputs on screen)
     RG.step({ name: "fx_lookup", args: { from: "KRW", to: "NGN" }, result: FX });
-    await sleep(1100);
+    await sleep(1400);
     RG.step({ name: "compare_costs", args: { amount: 500000, from_currency: "KRW", to_country: "Nigeria" }, result: COMPARE });
-    await sleep(1100);
+    await sleep(1400);
     RG.renderCompare(COMPARE);
-    await sleep(3600); // hold on the (now compact) card so it's fully readable before the reply
+    await sleep(4200); // hold for method cascade + breakdown bar + number count-up
 
     await botSays(
       "Good news — I checked all the ways to send your ₩500,000.\n\n" +
@@ -111,6 +111,7 @@
     RG.step({ name: "simulate_transfer", args: { amount: 500000, method: "stablecoin", recipient: "Mum (Lagos)", approved: true }, result: SENT });
     await sleep(1100);
     RG.renderTimeline("RG-7KQ4M2", { status: "sent" }, true);
+    await sleep(800); // let confetti + timeline entrance land before the reply
     await botSays("Sent! 🎉 You can watch it move above. I'll let you know the moment your mum can collect it.", 1300, 2600);
 
     // 3 — "where's my money?" → explicit status check

@@ -15,6 +15,7 @@ let busy = false;
 let voiceOn = false;
 let authEnabled = false; // server reports whether Google sign-in is configured
 let authUser = null;     // the signed-in user (or null)
+const isDemo = /[?&]demo/.test(location.search);
 
 /* ---------- helpers ---------- */
 const el = (tag, cls, html) => {
@@ -28,6 +29,7 @@ const krw = (n) => "₩" + Math.round(n).toLocaleString("en-US");
 const ngn = (n) => "₦" + Math.round(n).toLocaleString("en-US");
 const scrollDown = () => { log.scrollTop = log.scrollHeight; };
 const t = (key, vars) => window.I18N.t(key, vars);
+const fx = (name, node, ...args) => { if (window.RGAnim?.[name]) window.RGAnim[name](node, ...args); };
 
 /* animated count-up for hero numbers */
 function countUp(node, to, fmt, dur = 850) {
@@ -123,7 +125,9 @@ function localizeStatic() {
 function userBubble(text) {
   const row = el("div", "row user");
   row.append(el("div", "avatar", "🧑🏾"), el("div", "bubble", esc(text)));
-  return add(row);
+  add(row);
+  fx("userSend", row);
+  return row;
 }
 function botBubble(text) {
   const row = el("div", "row bot");
@@ -174,18 +178,23 @@ function renderStep(s) {
     `<div class="step-sec">▸ what it received (inputs)</div><pre>${esc(JSON.stringify(s.args || {}, null, 2))}</pre>` +
     `<div class="step-sec">▸ what it returned (output)</div><pre>${esc(JSON.stringify(s.result || {}, null, 2))}</pre>`;
   step.append(head, detail);
-  return add(step);
+  add(step);
+  fx("step", step);
+  return step;
 }
 
 /* ---------- rich cards (build* returns the node; render* mounts + registers) ---------- */
-function renderCompare(r) { return loc(() => buildCompare(r), animateNumbers); }
+function renderCompare(r) {
+  return loc(() => buildCompare(r), (node) => { animateNumbers(node); fx("compareCard", node); });
+}
 function buildCompare(r) {
-  const card = el("div", "card");
+  const card = el("div", "card compare-card");
   card.append(el("div", "card-head", `<span class="ic">📊</span> ${t("optionsToSend", { amount: krw(r.amount) })}`));
   const body = el("div", "card-body");
-  r.methods.forEach((m) => {
+  r.methods.forEach((m, i) => {
     const best = m.id === r.recommended;
-    const row = el("div", "method" + (best ? " best" : ""));
+    const row = el("div", "method method-enter" + (best ? " best" : ""));
+    row.style.setProperty("--stagger", i);
     row.innerHTML = `
       <div class="name">${esc(m.name)} ${best ? `<span class="badge-best">${t("bestValue")}</span>` : ""}</div>
       <div class="meta">${esc(m.speed)} · ${esc(m.payout)}</div>
@@ -198,7 +207,7 @@ function buildCompare(r) {
     body.append(row);
   });
   if (r.savings_vs_worst > 0) {
-    body.append(el("div", "savings-note", `✅ ${t("saves", { amount: `<b>${krw(r.savings_vs_worst)}</b>` })}`));
+    body.append(el("div", "savings-note savings-pop", `✅ ${t("saves", { amount: `<b>${krw(r.savings_vs_worst)}</b>` })}`));
   }
   card.append(body);
   return card;
@@ -212,9 +221,9 @@ function breakdownBar(b) {
   wrap.innerHTML = `
     <div class="btitle">🔎 ${t("whereGoes")}</div>
     <div class="bbar">
-      <div class="seg keep" style="width:${pct(b.recipient_gets)}%"></div>
-      <div class="seg fee" style="width:${pct(b.fee_cost)}%"></div>
-      <div class="seg fx" style="width:${pct(b.fx_margin_cost)}%"></div>
+      <div class="seg keep" data-w="${pct(b.recipient_gets)}" style="width:0%"></div>
+      <div class="seg fee" data-w="${pct(b.fee_cost)}" style="width:0%"></div>
+      <div class="seg fx" data-w="${pct(b.fx_margin_cost)}" style="width:0%"></div>
     </div>
     <div class="blegend">
       <span><i style="background:var(--green)"></i> ${t("familyKeeps")} <b>${keepPct}%</b> · ${ngn(b.recipient_gets)}</span>
@@ -224,7 +233,7 @@ function breakdownBar(b) {
   return wrap;
 }
 
-function renderScam(r) { return loc(() => buildScam(r)); }
+function renderScam(r) { return loc(() => buildScam(r), (n) => fx("scamAlert", n)); }
 function buildScam(r) {
   const card = el("div", "card shield " + r.risk);
   const head = { high: "🛑 " + t("scamWarning"), medium: "⚠️ " + t("beCareful"), low: "🛡️ " + t("safetyCheck") }[r.risk];
@@ -250,7 +259,7 @@ function buildScam(r) {
 
 // onDecision(approved) — when provided (e.g. the demo), buttons drive that callback
 // instead of the live agent. Without it, buttons talk to the live agent as normal.
-function renderApproval(r, onDecision) { return loc(() => buildApproval(r, onDecision)); }
+function renderApproval(r, onDecision) { return loc(() => buildApproval(r, onDecision), (n) => fx("approval", n)); }
 function buildApproval(r, onDecision) {
   const s = r.summary;
   const card = el("div", "card approval");
@@ -309,14 +318,23 @@ function renderTimeline(transferId, initial, simulate = false) {
   card.append(tl);
   add(card);
 
+  let lastIdx = -1;
   function paint(status, plainText) {
     const idx = STEPS.findIndex((s) => s.key === status);
+    const toPct = idx <= 0 ? 0 : idx === 1 ? 50 : 100;
+    if (idx > lastIdx && lastIdx >= 0) fx("timelineAdvance", card, fill, toPct);
     nodes.forEach((n, i) => {
       n.classList.toggle("active", i <= idx);
       n.classList.toggle("pulse", i === idx && status !== "cashed_out");
     });
-    fill.style.width = idx <= 0 ? "0%" : idx === 1 ? "50%" : "100%";
-    if (plainText) msgText.nodeValue = plainText;
+    fill.style.width = toPct + "%";
+    if (plainText) {
+      plain.classList.add("plain-swap");
+      msgText.nodeValue = plainText;
+      plain.addEventListener("animationend", () => plain.classList.remove("plain-swap"), { once: true });
+    }
+    if (status === "sent" && lastIdx < 0) setTimeout(() => fx("celebrate", card), 450);
+    lastIdx = idx;
   }
   const plainMap = {
     sent: t("statusSent"),
@@ -329,8 +347,8 @@ function renderTimeline(transferId, initial, simulate = false) {
 
   // Demo mode: advance locally so the UI works with no backend/key.
   if (simulate) {
-    setTimeout(() => { paint("received", plainMap.received); scrollDown(); }, 2600);
-    setTimeout(() => { paint("cashed_out", plainMap.cashed_out); scrollDown(); }, 5400);
+    setTimeout(() => { paint("received", plainMap.received); scrollDown(); }, 3000);
+    setTimeout(() => { paint("cashed_out", plainMap.cashed_out); scrollDown(); }, 6200);
     return;
   }
 
@@ -363,7 +381,7 @@ function renderTool(t) {
   return false;
 }
 
-function renderGuide(r) { return loc(() => buildGuide(r)); }
+function renderGuide(r) { return loc(() => buildGuide(r), (n) => n.classList.add("guide-enter")); }
 function buildGuide(r) {
   const card = el("div", "card");
   const place = esc(r.country) + (r.region && r.region !== "general" ? " · " + esc(r.region) : "");
@@ -496,6 +514,41 @@ voiceToggle.addEventListener("click", () => {
 
 /* ---------- light / dark theme ---------- */
 const themeToggle = document.getElementById("theme-toggle");
+
+/* ---------- demo entry (/?demo scripted playback) ---------- */
+function demoUrl() {
+  const u = new URL(location.origin + "/");
+  const lang = new URLSearchParams(location.search).get("lang");
+  if (lang) u.searchParams.set("lang", lang);
+  u.searchParams.set("demo", "");
+  return u.pathname + u.search;
+}
+
+function wireDemoLinks() {
+  const chip = document.getElementById("demo-chip");
+  const launch = document.getElementById("demo-launch");
+  if (isDemo) {
+    if (chip) {
+      chip.classList.add("active");
+      chip.setAttribute("aria-current", "page");
+      chip.removeAttribute("href");
+      chip.title = "Scripted demo in progress";
+    }
+    if (launch) launch.style.display = "none";
+    const orLine = document.querySelector(".demo-or");
+    if (orLine) orLine.style.display = "none";
+    return;
+  }
+  const url = demoUrl();
+  if (chip) {
+    chip.href = url;
+    chip.title = "Watch the full scripted demo";
+  }
+  if (launch) launch.href = url;
+}
+
+wireDemoLinks();
+
 function syncThemeIcon() {
   const dark = document.documentElement.getAttribute("data-theme") === "dark";
   themeToggle.textContent = dark ? "☀️" : "🌙";
@@ -510,7 +563,6 @@ themeToggle.addEventListener("click", () => {
 syncThemeIcon();
 
 /* ---------- language picker ---------- */
-const isDemo = /[?&]demo/.test(location.search);
 let langMenu = null, langMenuOpen = false;
 
 function selectLang(code) {
@@ -652,6 +704,6 @@ initAuth();
 window.RG = {
   userBubble, botBubble, typing, step: renderStep, updateLang,
   renderCompare, renderApproval, renderTimeline, renderGuide, renderScam,
-  hideIntro: () => { if (intro) intro.style.display = "none"; },
+  hideIntro: () => fx("introExit", intro) || (intro && (intro.style.display = "none")),
   scrollDown,
 };

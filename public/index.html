@@ -45,7 +45,7 @@
         <button class="voice-toggle" id="voice-toggle" title="Read answers aloud" aria-label="Toggle read-aloud">🔈</button>
         <span class="chip lang" id="lang-chip">EN</span>
         <span id="auth-chip"></span>
-        <span class="chip demo">Demo</span>
+        <a class="chip demo" id="demo-chip" href="/?demo" data-i18n="demoChip">Demo</a>
       </div>
     </header>
 
@@ -54,6 +54,8 @@
         <div class="kicker">🇰🇷 Korea → Nigeria · <span data-i18n="heroBadge">simulated demo</span></div>
         <div class="big"><span data-i18n="heroTitle">Send money home,</span><br /><em data-i18n="heroTitleEm">without the worry.</em></div>
         <p data-i18n="heroIntro">Talk to me in your language. I'll find the cheapest way, explain it plainly, protect your family from scams, and never move a won without your say-so.</p>
+        <a class="demo-launch" id="demo-launch" href="/?demo">▶ <span data-i18n="starterDemo">Watch the demo</span></a>
+        <p class="demo-or" data-i18n="demoOr">or try a prompt</p>
         <div class="starters">
           <button class="starter" data-msg="I want to send 500,000 won to my mum in Lagos">💸 <span data-i18n="starterSend">Send money home</span></button>
           <button class="starter" data-msg="What's the cheapest way to send 300,000 won to Nigeria?">🔎 <span data-i18n="starterCompare">Compare costs</span></button>
@@ -75,6 +77,7 @@
   </main>
 
   <script src="/i18n.js"></script>
+  <script src="/animations.js"></script>
   <script src="/app.js"></script>
   <script src="/demo.js"></script>
 </body>
