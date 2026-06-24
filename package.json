@@ -1,0 +1,22 @@
+{
+  "name": "remitguide",
+  "version": "0.1.0",
+  "description": "A multilingual, agentic AI guide for sending money home (Korea → Nigeria). Demo built on Qwen Cloud.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "chat": "node src/cli.js",
+    "seed:rag": "node src/rag/seed.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "openai": "^4.77.0",
+    "pg": "^8.13.1"
+  }
+}

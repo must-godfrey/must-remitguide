@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#067a4e" />
+  <title>RemitGuide — send money home, simply</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;700&display=swap" />
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='26' fill='%23067a4e'/%3E%3Ctext x='50' y='72' font-size='62' text-anchor='middle' fill='%23f4b72e' font-family='Georgia' font-weight='bold'%3ER%3C/text%3E%3C/svg%3E" />
+  <script>
+    // Set theme before first paint to avoid a flash. Priority: ?theme= > saved > system.
+    (function () {
+      var urlTheme = new URLSearchParams(location.search).get("theme");
+      var saved = localStorage.getItem("rg-theme");
+      var sysDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      var theme = (urlTheme === "dark" || urlTheme === "light") ? urlTheme : (saved || (sysDark ? "dark" : "light"));
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+</head>
+<body>
+  <!-- animated aurora background -->
+  <div class="aurora" aria-hidden="true">
+    <span class="blob b1"></span>
+    <span class="blob b2"></span>
+    <span class="blob b3"></span>
+  </div>
+
+  <main class="shell">
+    <header class="topbar">
+      <div class="mark">R</div>
+      <div class="brand">
+        <h1>RemitGuide</h1>
+        <div class="sub">
+          <span class="corridor">🇰🇷 Korea → Nigeria 🇳🇬</span>
+          <span class="dot-sep">·</span>
+          <span id="tagline" data-i18n="tagline">a friendly guide to sending money home</span>
+        </div>
+      </div>
+      <div class="chips">
+        <button class="voice-toggle" id="steps-toggle" title="Show every tool's inputs &amp; outputs" aria-label="Toggle tool details">⚙</button>
+        <button class="voice-toggle" id="theme-toggle" title="Toggle light / dark" aria-label="Toggle theme">🌙</button>
+        <button class="voice-toggle" id="voice-toggle" title="Read answers aloud" aria-label="Toggle read-aloud">🔈</button>
+        <span class="chip lang" id="lang-chip">EN</span>
+        <span class="chip demo">Demo</span>
+      </div>
+    </header>
+
+    <section class="log" id="log">
+      <div class="intro" id="intro">
+        <div class="kicker">🇰🇷 Korea → Nigeria · <span data-i18n="heroBadge">simulated demo</span></div>
+        <div class="big"><span data-i18n="heroTitle">Send money home,</span><br /><em data-i18n="heroTitleEm">without the worry.</em></div>
+        <p data-i18n="heroIntro">Talk to me in your language. I'll find the cheapest way, explain it plainly, protect your family from scams, and never move a won without your say-so.</p>
+        <div class="starters">
+          <button class="starter" data-msg="I want to send 500,000 won to my mum in Lagos">💸 <span data-i18n="starterSend">Send money home</span></button>
+          <button class="starter" data-msg="What's the cheapest way to send 300,000 won to Nigeria?">🔎 <span data-i18n="starterCompare">Compare costs</span></button>
+          <button class="starter" data-msg="Where is my money right now?">📍 <span data-i18n="starterTrack">Where's my money?</span></button>
+          <button class="starter" data-msg="How does my family collect the cash safely in Lagos?">🛡️ <span data-i18n="starterSafe">Stay safe</span></button>
+        </div>
+      </div>
+    </section>
+
+    <div class="composer">
+      <form id="form">
+        <textarea id="input" rows="1" data-i18n-ph="placeholder" placeholder="Type a message…  (any language)" autocomplete="off"></textarea>
+        <button id="send" type="submit" aria-label="Send">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
+        </button>
+      </form>
+      <div class="foot" data-i18n="footer">Demo only · all transfers are simulated · rates are illustrative</div>
+    </div>
+  </main>
+
+  <script src="/i18n.js"></script>
+  <script src="/app.js"></script>
+  <script src="/demo.js"></script>
+</body>
+</html>

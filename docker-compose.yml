@@ -1,0 +1,25 @@
+# Local pgvector for the RAG knowledge base.
+#   docker compose up -d
+#   npm run seed:rag        # embeds the knowledge base into pgvector (needs QWEN_API_KEY)
+# Then set DATABASE_URL in .env and get_cashout_guide will retrieve from RAG.
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: remitguide-pg
+    environment:
+      POSTGRES_USER: remit
+      POSTGRES_PASSWORD: remit
+      POSTGRES_DB: remitguide
+    ports:
+      - "5432:5432"
+    volumes:
+      - remit_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U remit -d remitguide"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  remit_pgdata:
