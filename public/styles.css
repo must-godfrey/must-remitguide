@@ -208,6 +208,33 @@ body::after {
 .voice-toggle:hover { background: rgba(255, 255, 255, 0.22); }
 .voice-toggle.on { background: var(--gold-bright); color: var(--green-deep); border-color: var(--gold-bright); }
 
+/* --- Google sign-in chrome --- */
+.signin-chip, .user-chip {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer; text-decoration: none;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+  padding: 5px 11px; border-radius: var(--r-pill); border: 0; font-family: var(--sans);
+  transition: all 0.18s ease;
+}
+.signin-chip { background: rgba(255, 255, 255, 0.92); color: var(--green-deep); }
+.signin-chip:hover { background: #fff; transform: translateY(-1px); }
+.user-chip {
+  background: rgba(255, 255, 255, 0.16); color: #fff;
+  max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.user-chip:hover { background: rgba(255, 255, 255, 0.26); }
+.g-ic { flex: none; }
+
+/* sign-in gate card (shown in the log when login is required) */
+.signin-copy { color: var(--ink-soft); font-size: 14.5px; line-height: 1.5; margin: 2px 0 13px; }
+.btn-google {
+  display: inline-flex; align-items: center; gap: 10px; cursor: pointer; text-decoration: none;
+  background: #fff; color: #1f1f1f; border: 1.5px solid var(--line);
+  padding: 11px 18px; border-radius: var(--r-pill); font-family: var(--sans);
+  font-weight: 700; font-size: 14.5px; box-shadow: var(--shadow-sm); transition: all 0.18s ease;
+}
+.btn-google:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: var(--green-line); }
+[data-theme="dark"] .btn-google { background: #f6f6f6; }
+
 /* ---------------- Conversation ---------------- */
 .log {
   position: relative;
@@ -304,22 +331,19 @@ body::after {
   border-radius: var(--r-md); overflow: hidden; box-shadow: var(--shadow-sm);
   animation: pop 0.4s var(--spring) both; font-size: 13.5px;
 }
-.step-head { display: flex; align-items: center; gap: 9px; padding: 11px 14px; cursor: pointer; user-select: none; transition: background 0.14s ease; }
-.step-head:hover { background: var(--green-wash); }
+.step-head { display: flex; align-items: center; gap: 9px; padding: 11px 14px; user-select: none; }
 .step-head .gear { color: #fff; background: linear-gradient(150deg, var(--green-bright), var(--green)); width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; font-size: 12px; flex: none; }
 .step-head b { font-family: ui-monospace, "SF Mono", monospace; font-weight: 800; color: var(--green); font-size: 13px; flex: none; }
 .step-sum { color: var(--ink); font-size: 13.5px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.step-caret { color: var(--green); transition: transform 0.2s ease; font-size: 11px; flex: none; }
-.step-caret::after { content: " details"; font-size: 10px; font-weight: 700; letter-spacing: 0.03em; color: var(--ink-faint); }
-.step.open .step-caret { transform: none; }
-.step.open .step-caret::after { content: " hide"; }
-.step.open .step-caret { color: var(--ink-faint); }
 .step-detail { display: none; padding: 0 13px 12px; }
 .step.open .step-detail { display: block; animation: rise 0.25s ease both; }
 .step-sec { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-faint); font-weight: 800; margin: 9px 0 4px; }
 .step pre {
   background: var(--card); border: 1px solid var(--line-soft); border-radius: 9px; padding: 9px 11px;
-  overflow-x: auto; font-size: 11.5px; line-height: 1.5; font-family: ui-monospace, "SF Mono", monospace;
+  /* Bound large tool outputs so a single action never overflows the screen — the
+     full JSON stays visible and scrolls inside its own box instead of being cut. */
+  max-height: 300px; overflow: auto; overscroll-behavior: contain;
+  font-size: 11.5px; line-height: 1.5; font-family: ui-monospace, "SF Mono", monospace;
   color: var(--ink); white-space: pre-wrap; word-break: break-word;
 }
 .step pre .k { color: var(--green); }

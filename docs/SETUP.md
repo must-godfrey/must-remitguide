@@ -14,8 +14,8 @@ npm start
 # open http://localhost:3737/?demo
 ```
 You'll see the full flow: cost comparison → transparency → **interactive approval (you click it)** →
-live timeline → "where's my money?" → Korean cash-out guide → Scam Shield. Every "⚙ step" is
-clickable to reveal the exact tool inputs/outputs. Toggle ☀️/🌙 for light/dark. `?theme=dark` also works.
+live timeline → "where's my money?" → Korean cash-out guide → Scam Shield. Every "⚙ step" shows
+the exact tool inputs/outputs on screen. Toggle ☀️/🌙 for light/dark. `?theme=dark` also works.
 
 ---
 
@@ -38,6 +38,33 @@ This makes it a *real* agent (any-language chat + tool calls), not the script.
    # or: npm start  →  http://localhost:3737  and chat in English / 한국어 / Tiếng Việt / etc.
    ```
    Expect: the agent calls `compare_costs`, mirrors your language, and never sends without approval.
+
+---
+
+## Phase 1.5 — Require Google sign-in (optional, ~10 min)
+Gates the **live chat** so each person logs in with their own Google account. The public
+scripted demo (`/?demo`) stays open. If you skip this, the chat stays open and the server
+warns about it at boot.
+
+1. Go to **[Google Cloud Console](https://console.cloud.google.com)** → create/select a project.
+2. **APIs & Services → OAuth consent screen** → choose **External**, fill in the app name + your
+   support email, and publish (or add yourself as a test user).
+3. **APIs & Services → Credentials → Create credentials → OAuth client ID → Web application.**
+4. Add **Authorized redirect URIs** (exact match matters):
+   - `http://localhost:3737/auth/google/callback` (local)
+   - `https://<your-app>.onrender.com/auth/google/callback` (production)
+5. Copy the **Client ID** + **Client secret** into your environment:
+   ```bash
+   GOOGLE_CLIENT_ID=...apps.googleusercontent.com
+   GOOGLE_CLIENT_SECRET=GOCSPX-...
+   SESSION_SECRET=$(openssl rand -hex 32)     # signs the session cookie
+   APP_BASE_URL=https://<your-app>.onrender.com   # prod only; sets the redirect URI
+   ```
+   Set the same vars in the **Render dashboard** for the deployed instance.
+6. Restart. Boot log should say `auth: Google sign-in ENABLED`. Visit `/` → "Sign in with Google".
+
+> No new npm packages — sign-in uses Node's built-in `crypto` + `fetch`. Sessions are stateless
+> (a signed, HTTP-only cookie), so no database is required.
 
 ---
 

@@ -1,6 +1,6 @@
 /* Offline demo player. Activate with /?demo
    Plays a scripted, well-paced Korea -> Nigeria conversation through the real
-   rendering code — including the expandable "what happened under the hood" steps —
+   rendering code — including the always-visible "what happened under the hood" steps —
    so viewers can clearly follow how the agent works, with no Qwen key.
    Deterministic = a reliable, zero-cost source for the demo video. */
 
@@ -75,7 +75,7 @@
     RG.updateLang(q1); RG.userBubble(q1);
     await sleep(900);
 
-    // the agent reasons with tools (each step is expandable to see inputs/outputs)
+    // the agent reasons with tools (each step shows its inputs/outputs on screen)
     RG.step({ name: "fx_lookup", args: { from: "KRW", to: "NGN" }, result: FX });
     await sleep(1100);
     RG.step({ name: "compare_costs", args: { amount: 500000, from_currency: "KRW", to_country: "Nigeria" }, result: COMPARE });
@@ -151,15 +151,12 @@
     await sleep(700);
     const log = document.getElementById("log");
 
-    // 1) Expand every ⚙ step so all the details (inputs + outputs) are visible.
-    document.querySelectorAll(".step").forEach((s) => s.classList.add("open"));
-
-    // 2) A clear end-marker in the conversation.
+    // A clear end-marker in the conversation. (Every ⚙ step stays expanded on screen.)
     const endCard = document.createElement("div");
     endCard.className = "demo-end";
     endCard.innerHTML =
-      `<b>✓ That's the whole flow.</b> Every ⚙ step above is now expanded — scroll up to see ` +
-      `exactly what each tool received and returned (the agent's real work). Tap any step to collapse it.`;
+      `<b>✓ That's the whole flow.</b> Scroll up to see every ⚙ step — ` +
+      `exactly what each tool received and returned (the agent's real work), shown in full.`;
     log.appendChild(endCard);
 
     // 3) Scroll back to the very top so you can read it from the beginning, at your pace.

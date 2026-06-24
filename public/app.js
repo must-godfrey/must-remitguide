@@ -13,7 +13,8 @@ const voiceToggle = document.getElementById("voice-toggle");
 let messages = []; // full history sent to the agent each turn
 let busy = false;
 let voiceOn = false;
-let stepsOpen = false; // when true, every tool step shows its inputs/outputs
+let authEnabled = false; // server reports whether Google sign-in is configured
+let authUser = null;     // the signed-in user (or null)
 
 /* ---------- helpers ---------- */
 const el = (tag, cls, html) => {
@@ -86,7 +87,10 @@ function add(node) {
     node.scrollIntoView({ block: tooTall ? "start" : "end", behavior: "auto" });
   };
   requestAnimationFrame(place);
-  setTimeout(place, 90); // re-assert after layout settles
+  // Re-assert as layout settles — fonts, count-up numbers and the word reveal can
+  // change a node's height after it mounts, so the final resting position is correct.
+  setTimeout(place, 90);
+  setTimeout(place, 380);
   return node;
 }
 
@@ -156,20 +160,19 @@ function stepSummary(s) {
   }
 }
 
-// Expandable "what happened under the hood" step: tool name + plain summary,
-// click to reveal the exact inputs and the raw output.
+// "What happened under the hood" step: tool name + plain summary, with the exact
+// inputs and raw output always shown. These stay expanded on screen so the agent's
+// work is always visible to the user — never collapsed away.
 function renderStep(s) {
-  const step = el("div", "step");
+  const step = el("div", "step open");
   const head = el("div", "step-head");
   head.innerHTML =
     `<span class="gear">⚙</span><b>${esc(s.name)}</b>` +
-    `<span class="step-sum">${esc(stepSummary(s))}</span><span class="step-caret">▸</span>`;
+    `<span class="step-sum">${esc(stepSummary(s))}</span>`;
   const detail = el("div", "step-detail");
   detail.innerHTML =
     `<div class="step-sec">▸ what it received (inputs)</div><pre>${esc(JSON.stringify(s.args || {}, null, 2))}</pre>` +
     `<div class="step-sec">▸ what it returned (output)</div><pre>${esc(JSON.stringify(s.result || {}, null, 2))}</pre>`;
-  head.onclick = () => step.classList.toggle("open");
-  if (stepsOpen) step.classList.add("open"); // honor the global "show details" toggle
   step.append(head, detail);
   return add(step);
 }
@@ -421,6 +424,7 @@ function updateLang(text) {
    opts.keepLang — don't re-detect language from this text (e.g. control phrases) */
 async function turn(text, opts = {}) {
   if (busy) return;
+  if (authEnabled && !authUser && !isDemo) { promptSignIn(); return; } // live chat is gated
   if (intro) { intro.style.display = "none"; }
   if (!opts.keepLang) updateLang(text);
   userBubble(text);
@@ -435,6 +439,14 @@ async function turn(text, opts = {}) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ messages }),
     });
+    if (res.status === 401) { // session expired or never signed in
+      typer.remove();
+      authUser = null;
+      renderAuthChip();
+      gateComposer();
+      promptSignIn();
+      return;
+    }
     const data = await res.json();
     typer.remove();
 
@@ -558,15 +570,6 @@ function openLangMenu() {
 }
 function closeLangMenu() { if (langMenu) langMenu.menu.style.display = "none"; langMenuOpen = false; }
 
-/* ---------- "show all tool details" toggle ---------- */
-const stepsToggle = document.getElementById("steps-toggle");
-stepsToggle.addEventListener("click", () => {
-  stepsOpen = !stepsOpen;
-  stepsToggle.classList.toggle("on", stepsOpen);
-  stepsToggle.title = stepsOpen ? "Hide tool details" : "Show every tool's inputs & outputs";
-  document.querySelectorAll(".step").forEach((s) => s.classList.toggle("open", stepsOpen));
-});
-
 langChip.style.cursor = "pointer";
 langChip.addEventListener("click", (e) => { e.stopPropagation(); langMenuOpen ? closeLangMenu() : openLangMenu(); });
 document.addEventListener("click", (e) => {
@@ -574,10 +577,76 @@ document.addEventListener("click", (e) => {
 });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeLangMenu(); });
 
+/* ---------- Google sign-in (gates the live chat; the /?demo player is always public) ---------- */
+const authChipSlot = document.getElementById("auth-chip");
+const GOOGLE_G =
+  `<svg class="g-ic" viewBox="0 0 18 18" width="15" height="15" aria-hidden="true">` +
+  `<path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/>` +
+  `<path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"/>` +
+  `<path fill="#FBBC05" d="M3.97 10.72a5.4 5.4 0 0 1 0-3.44V4.95H.96a9 9 0 0 0 0 8.1l3.01-2.33z"/>` +
+  `<path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.42 0 9 0A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/></svg>`;
+
+function signInLink(label, cls) {
+  const a = el("a", cls, `${GOOGLE_G}<span>${esc(label)}</span>`);
+  a.href = "/auth/google";
+  return a;
+}
+
+function renderAuthChip() {
+  if (!authChipSlot) return;
+  authChipSlot.innerHTML = "";
+  if (!authEnabled) return; // sign-in not configured → no chip
+  if (authUser) {
+    const chip = el("button", "chip user-chip", `👤 ${esc(authUser.name || authUser.email)}`);
+    chip.title = "Sign out";
+    chip.onclick = () => { location.href = "/auth/logout"; };
+    authChipSlot.append(chip);
+  } else {
+    authChipSlot.append(signInLink("Sign in", "chip signin-chip"));
+  }
+}
+
+function gateComposer() {
+  const locked = authEnabled && !authUser && !isDemo;
+  input.disabled = locked;
+  send.disabled = locked;
+  if (locked) input.placeholder = "Sign in with Google to start chatting…";
+  document.querySelectorAll(".starter").forEach((b) => { b.disabled = locked; });
+}
+
+let signInCardShown = false;
+function promptSignIn() {
+  scrollDown();
+  if (signInCardShown) return;
+  signInCardShown = true;
+  if (intro) intro.style.display = "none";
+  const card = el("div", "card signin-card");
+  card.append(el("div", "card-head", `<span class="ic">🔐</span> Sign in to start`));
+  const body = el("div", "card-body");
+  body.append(el("p", "signin-copy",
+    "The live chat is private — sign in with your Google account to send money home with RemitGuide. The scripted demo stays open at <b>/?demo</b>."));
+  body.append(signInLink("Sign in with Google", "btn-google"));
+  card.append(body);
+  add(card);
+}
+
+async function initAuth() {
+  if (isDemo) return; // public demo: never gate
+  let data;
+  try { data = await (await fetch("/auth/me")).json(); }
+  catch { return; } // network hiccup — the server still enforces /chat
+  authEnabled = Boolean(data.authEnabled);
+  authUser = data.authenticated ? data.user : null;
+  renderAuthChip();
+  gateComposer();
+  if (authEnabled && !authUser) promptSignIn();
+}
+
 // Initialize chrome. ?lang=xx forces a starting language (shareable); else English.
 const urlLang = new URLSearchParams(location.search).get("lang");
 applyLang(urlLang && window.I18N.languages.some((l) => l.code === urlLang) ? urlLang : "en");
 input.focus();
+initAuth();
 
 /* Render API reused by the offline demo player (demo.js). */
 window.RG = {
