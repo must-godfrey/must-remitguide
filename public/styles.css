@@ -950,14 +950,73 @@ body:has(.log .row) .demo-launch { animation: none; }
 [dir="rtl"] .reasons li::before, [dir="rtl"] .todo li::before, [dir="rtl"] .guide-method li::before { left: auto; right: 0; }
 
 /* ---------------- Responsive ---------------- */
+
+/* Brand never pushes the chips off-screen, at any width */
+.brand { overflow: hidden; }
+.brand h1 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.brand .sub { overflow: hidden; }
+.corridor { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+
+/* full-bleed shell below the desktop card breakpoint */
 @media (max-width: 639px) {
-  .shell { border-radius: 0; border: 0; box-shadow: none; margin: 0; }
+  .shell { border-radius: 0; border: 0; box-shadow: none; margin: 0; max-height: none; height: 100dvh; }
 }
-@media (max-width: 560px) {
-  .card { margin-left: 0; width: 100%; }
-  [dir="rtl"] .card { margin-right: 0; }
-  .bubble { max-width: 85%; }
-  .intro .big { font-size: clamp(30px, 10vw, 44px); }
+
+/* Tablets & large phones */
+@media (max-width: 640px) {
+  .topbar { padding: 12px 14px; gap: 11px; }
+  .log { padding: 20px 14px 16px; gap: 15px; }
+  .composer { padding: 12px 14px calc(14px + env(safe-area-inset-bottom)); }
+  .intro { padding: 14px 4px; }
+  .intro p { font-size: 15.5px; margin-bottom: 22px; }
+
+  /* steps, cards and the end-marker go full width (no avatar-aligned indent) */
+  .card, .step, .demo-end { margin-left: 0; width: 100%; }
+  [dir="rtl"] .card, [dir="rtl"] .step, [dir="rtl"] .demo-end { margin-right: 0; }
+  .bubble { max-width: 86%; }
+
+  /* compact header controls so everything fits one row */
+  .chips { gap: 6px; }
+  .voice-toggle { width: 34px; height: 34px; font-size: 14px; border-radius: 10px; }
+  .chip, .chip.demo, .signin-chip, .user-chip { font-size: 10px; padding: 5px 9px; }
+  .chip.lang { max-width: 96px; }
+  .user-chip { max-width: 96px; }
+  .lang-menu { width: min(248px, calc(100vw - 20px)); }
+  .dot-sep, #tagline { display: none; }   /* keep the 🇰🇷→🇳🇬 corridor, drop the tagline */
+}
+
+/* Phones */
+@media (max-width: 480px) {
+  .mark { width: 38px; height: 38px; font-size: 20px; border-radius: 12px; }
+  .brand h1 { font-size: 18px; }
+  .voice-toggle { width: 32px; height: 32px; font-size: 13px; }
+  .chip.lang { max-width: 78px; }
+  .user-chip { max-width: 72px; }
+
+  .intro .big { font-size: clamp(28px, 10vw, 40px); }
+  .demo-launch { font-size: 15px; padding: 13px 22px; }
+  .demo-or { margin-bottom: 12px; }
+  .starter { font-size: 13.5px; padding: 10px 14px; }
+
+  .card-head { font-size: 15px; padding: 12px 15px; }
+  .card-body { padding: 6px 12px 12px; }
+  .method { padding: 11px 12px; }
+  .cost .num { font-size: 19px; }
+  .verdict { font-size: 17px; }
+  .step-head { padding: 11px 13px; }
+
+  .demo-done { bottom: calc(env(safe-area-inset-bottom) + 86px); padding: 6px 7px 6px 11px; gap: 6px; }
+  .demo-done button { font-size: 12px; padding: 6px 10px; }
+}
+
+/* Very small phones */
+@media (max-width: 360px) {
+  .topbar { gap: 9px; padding: 11px 12px; }
+  .brand h1 { font-size: 16px; }
+  .corridor { display: none; }   /* h1 only — guarantees the chips fit */
+  .chips { gap: 4px; }
+  .voice-toggle { width: 30px; height: 30px; font-size: 12px; border-radius: 9px; }
+  .chip.lang { max-width: 64px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
